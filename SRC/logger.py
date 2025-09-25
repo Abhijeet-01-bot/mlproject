@@ -2,23 +2,21 @@ import logging
 import os
 from datetime import datetime
 
-LOG_FILE = f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log"
-logs_path =os.path.join(os.getcwd(),"logs",LOG_FILE)
-os.makedirs(logs_path,exist_ok=True)
+# Always create logs in the project root
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+logs_dir = os.path.join(project_root, "logs")
+os.makedirs(logs_dir, exist_ok=True)
 
-LOG_FILE_PATH = os.path.join(logs_path, LOG_FILE)
+LOG_FILE = f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log"
+LOG_FILE_PATH = os.path.join(logs_dir, LOG_FILE)
 
 logging.basicConfig(
     filename=LOG_FILE_PATH,
     format="[ %(asctime)s ] %(lineno)d %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO,
-
+    force=True
 )
 
+logging.info("Logging system initialized")
 
-if __name__ == "__main__":
-    try:
-        a = 1 / 0
-    except:    
-        raise CustomException
-        logging.error("logging has started")
+
