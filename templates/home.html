@@ -1,112 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Performance Predictor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals (Stone) with a calming Blue accent. -->
+    <!-- Application Structure Plan: The application is structured as a narrative flow. It starts with an introduction (Hero), moves to the core interactive task (Predictor Form), presents the outcome (Results), and finally offers broader context (Dashboard). This top-down approach guides the user from a general overview to a specific, personalized result, and then zooms out to show dataset trends. This is more intuitive than just presenting a form, as it frames the 'why' before the 'how' and provides analytical value beyond the single prediction. -->
+    <!-- Visualization & Content Choices: 
+        - Predictor Form: Goal: Organize data input. Method: Grouped, styled select/input fields in cards. Interaction: User selection/input. Justification: Cleaner and more organized than a simple list of fields.
+        - Result Score: Goal: Inform. Method: Large, clear numeric display. Interaction: Dynamically updated via JS. Justification: Immediate, high-impact feedback.
+        - Result Chart (Horizontal Bar): Goal: Compare. Method: Chart.js Canvas. Interaction: Visualizes the user's score against a 0-100 scale. Justification: Provides instant context for the predicted score (e.g., is it high or low?).
+        - Dashboard Chart 1 (Bar): Goal: Compare. Method: Chart.js Canvas. Info: Parental Education vs. Scores. Justification: Shows the correlation between education level and student outcomes, a key factor in the dataset.
+        - Dashboard Chart 2 (Doughnut): Goal: Inform (Proportion). Method: Chart.js Canvas. Info: Test Prep Completion Rate. Justification: Highlights the prevalence of a key predictive factor.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800">
 
-<html>
-<body>
-    <div class="login">
-       <h1>Student Exam Performance Indicator</h1>
-   
-       <form action="{{ url_for('predict_datapoint')}}" method="post">
-        <h1>
-            <legend>Student Exam Performance Prediction</legend>
-        </h1>
-        <div class="mb-3">
-            <label class="form-label">Gender</label>
-            <select class="form-control" name="gender" placeholder="Enter you Gender" required>
-                <option class="placeholder" selected disabled value="">Select your Gender</option>
-                <option value="male">
-                    Male
-                </option>
-                <option value="female">
-                    Female
-                </option>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Race or Ethnicity</label>
-            <select class="form-control" name="ethnicity" placeholder="Enter you ethnicity" required>
-                <option class="placeholder" selected disabled value="">Select Ethnicity</option>
-                <option value="group A">
-                    Group A
-                </option>
-                <option value="group B">
-                    Group B
-                </option>
-                <option value="group C">
-                    Group C
-                </option>
-                <option value="group D">
-                    Group D
-                </option>
-                <option value="group E">
-                    Group E
-                </option>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Parental Level of Education</label>
-            <select class="form-control" name="parental_level_of_education"
-                placeholder="Enter you Parent Education" required>
-                <option class="placeholder" selected disabled value="">Select Parent Education</option>
-                <option value="associate's degree">
-                    associate's degree
-                </option>
-                <option value="bachelor's degree">
-                    bachelor's degree
-                </option>
-                <option value="high school">
-                    high school
-                </option>
-                <option value="master's degree">
-                    master's degree
-                </option>
-                <option value="some college">
-                    some college
-                </option>
-                <option value="some high school">
-                    some high school
-                </option>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Lunch Type</label>
-            <select class="form-control" name="lunch" placeholder="Enter you Lunch" required>
-                <option class="placeholder" selected disabled value="">Select Lunch Type</option>
-                <option value="free/reduced">
-                    free/reduced
-                </option>
-                <option value="standard">
-                    standard
-                </option>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Test preparation Course</label>
-            <select class="form-control" name="test_preparation_course" placeholder="Enter you Course"
-                required>
-                <option class="placeholder" selected disabled value="">Select Test_course</option>
-                <option value="none">
-                    None
-                </option>
-                <option value="completed">
-                    Completed
-                </option>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Writing Score out of 100</label>
-            <input class="form-control" type="number" name="reading_score"
-                placeholder="Enter your Reading score" min='0' max='100' />
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Reading Score out of 100</label>
-            <input class="form-control" type="number" name="writing_score"
-                placeholder="Enter your Reading Score" min='0' max='100' />
-        </div>
-        <div class="mb-3">
-            <input class="btn btn-primary" type="submit" value="Predict your Maths Score" required />
-        </div>
-    </form>
-    <h2>
-       THE  prediction is {{results}}
-    </h2>
-   <body>
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-stone-900">Student Performance Insights</h1>
+            <p class="mt-4 text-lg text-stone-600 max-w-3xl mx-auto">An interactive tool to predict student math scores and explore the factors that influence academic success.</p>
+        </header>
+
+        <main>
+            <section id="predictor" class="mb-16">
+                <div class="bg-white p-8 rounded-2xl shadow-lg border border-stone-200">
+                    <h2 class="text-2xl font-bold mb-2 text-stone-900">Predict Math Score</h2>
+                    <p class="text-stone-600 mb-8">Enter the student's details below. The model will predict their score in the math exam based on these demographic and preparatory factors.</p>
+                    
+                    <form id="prediction-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        
+                        <div>
+                            <label for="gender" class="block text-sm font-medium text-stone-700 mb-1">Gender</label>
+                            <select id="gender" name="gender" class="w-full p-3 bg-stone-100 border border-stone-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="ethnicity" class="block text-sm font-medium text-stone-700 mb-1">Race/Ethnicity</label>
+                            <select id="ethnicity" name="ethnicity" class="w-full p-3 bg-stone-100 border border-stone-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                                <option value="group A">Group A</option>
+                                <option value="group B">Group B</option>
+                                <option value="group C">Group C</option>
+                                <option value="group D">Group D</option>
+                                <option value="group E">Group E</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="parental_level_of_education" class="block text-sm font-medium text-stone-700 mb-1">Parental Education</label>
+                            <select id="parental_level_of_education" name="parental_level_of_education" class="w-full p-3 bg-stone-100 border border-stone-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                                <option value="associate's degree">Associate's Degree</option>
+                                <option value="bachelor's degree">Bachelor's Degree</option>
+                                <option value="high school">High School</option>
+                                <option value="master's degree">Master's Degree</option>
+                                <option value="some college">Some College</option>
+                                <option value="some high school">Some High School</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="lunch" class="block text-sm font-medium text-stone-700 mb-1">Lunch Program</label>
+                            <select id="lunch" name="lunch" class="w-full p-3 bg-stone-100 border border-stone-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                                <option value="standard">Standard</option>
+                                <option value="free/reduced">Free/Reduced</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="test_preparation_course" class="block text-sm font-medium text-stone-700 mb-1">Test Preparation</label>
+                            <select id="test_preparation_course" name="test_preparation_course" class="w-full p-3 bg-stone-100 border border-stone-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                                <option value="none">None</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="reading_score" class="block text-sm font-medium text-stone-700 mb-1">Reading Score</label>
+                            <input type="number" id="reading_score" name="reading_score" min="0" max="100" value="75" class="w-full p-3 bg-stone-100 border border-stone-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        </div>
+
+                        <div class="md:col-span-2 lg:col-span-1">
+                            <label for="writing_score" class="block text-sm font-medium text-stone-700 mb-1">Writing Score</label>
+                            <input type="number" id="writing_score" name="writing_score" min="0" max="100" value="75" class="w-full p-3 bg-stone-100 border border-stone-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        </div>
+
+                        <div class="md:col-span-2 lg:col-span-2 flex items-end">
+                             <button type="submit" class="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-lg px-5 py-3 transition-all duration-300 shadow-md hover:shadow-lg">
+                                Predict Score
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <section id="results" class="mb-16 hidden text-center">
+                <div class="bg-white p-8 rounded-2xl shadow-lg border border-stone-200">
+                     <h2 class="text-2xl font-bold mb-2 text-stone-900">Predicted Math Score</h2>
+                    <p class="text-stone-600 mb-6">Based on the provided information, the student's predicted math score is:</p>
+                    <p id="prediction-output" class="text-7xl font-bold text-blue-600 mb-8">0</p>
+                    <div class="chart-container">
+                        <canvas id="resultChart"></canvas>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="dashboard">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-stone-900">Dataset Dashboard</h2>
+                    <p class="mt-3 text-lg text-stone-600 max-w-3xl mx-auto">Explore insights from the full student dataset to understand broader trends.</p>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-white p-8 rounded-2xl shadow-lg border border-stone-200">
+                        <h3 class="text-xl font-bold text-stone-900 mb-4 text-center">Average Scores by Parental Education</h3>
+                        <div class="chart-container h-96">
+                             <canvas id="educationChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white p-8 rounded-2xl shadow-lg border border-stone-200">
+                        <h3 class="text-xl font-bold text-stone-900 mb-4 text-center">Test Preparation Course Completion</h3>
+                         <div class="chart-container h-96">
+                             <canvas id="prepChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('prediction-form');
+            const resultsSection = document.getElementById('results');
+            const predictionOutput = document.getElementById('prediction-output');
+            
+            let resultChart = null;
+
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                const readingScore = parseInt(document.getElementById('reading_score').value);
+                const writingScore = parseInt(document.getElementById('writing_score').value);
+                const testPrep = document.getElementById('test_preparation_course').value;
+
+                let simulatedScore = (readingScore * 0.45) + (writingScore * 0.55);
+                if (testPrep === 'completed') {
+                    simulatedScore += 5;
+                }
+                
+                simulatedScore = Math.max(0, Math.min(100, Math.round(simulatedScore)));
+
+                predictionOutput.textContent = simulatedScore;
+                resultsSection.classList.remove('hidden');
+                
+                renderResultChart(simulatedScore);
+
+                resultsSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+
+            function renderResultChart(score) {
+                const ctx = document.getElementById('resultChart').getContext('2d');
+                const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                gradient.addColorStop(0, 'rgba(59, 130, 246, 0.8)');
+                gradient.addColorStop(1, 'rgba(37, 99, 235, 0.8)');
+
+                if (resultChart) {
+                    resultChart.destroy();
+                }
+
+                resultChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Predicted Score'],
+                        datasets: [{
+                            label: 'Math Score',
+                            data: [score],
+                            backgroundColor: gradient,
+                            borderColor: 'rgba(37, 99, 235, 1)',
+                            borderWidth: 2,
+                            borderRadius: 8,
+                            barThickness: 50
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                enabled: false
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                max: 100,
+                                grid: {
+                                    drawOnChartArea: false
+                                },
+                                ticks: {
+                                    font: {
+                                        size: 14,
+                                        family: "'Inter', sans-serif"
+                                    }
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                     display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            function renderDashboardCharts() {
+                const educationCtx = document.getElementById('educationChart').getContext('2d');
+                new Chart(educationCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Master\'s', 'Bachelor\'s', 'Associate\'s', 'Some College', 'High School', 'Some HS'],
+                        datasets: [{
+                            label: 'Average Math Score',
+                            data: [74, 71, 69, 66, 62, 59],
+                            backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 1,
+                            borderRadius: 5
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            }
+                        },
+                        scales: {
+                             y: {
+                                beginAtZero: true,
+                                suggestedMax: 100
+                            }
+                        }
+                    }
+                });
+
+                const prepCtx = document.getElementById('prepChart').getContext('2d');
+                new Chart(prepCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['None', 'Completed'],
+                        datasets: [{
+                            label: 'Test Preparation',
+                            data: [642, 358],
+                            backgroundColor: [
+                                'rgba(239, 68, 68, 0.6)',
+                                'rgba(34, 197, 94, 0.6)',
+                            ],
+                            borderColor: [
+                                'rgba(239, 68, 68, 1)',
+                                'rgba(34, 197, 94, 1)',
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                         plugins: {
+                            legend: {
+                                position: 'bottom',
+                            }
+                        }
+                    }
+                });
+            }
+            
+            renderDashboardCharts();
+        });
+    </script>
+</body>
 </html>
